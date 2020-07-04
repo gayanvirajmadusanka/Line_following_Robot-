@@ -1,0 +1,285 @@
+  /*
+ Motor Drive	Arduino		ATMEGA328P
+ 	INA      		D9			    PB1				PWM B
+ 	INB			    D13		  	  PB5				Dir B
+ 	INC 			  D12	   		  PB4				Dir A
+ 	IND 			  D10  		    PB2				PWM A
+
+ 	move(dir,Lspeed,Rspeed) ---->>> dir[1=forward, 0=backward]  if forward speed[50000 --> 5000]		if backward speed[5000 --> 50000]
+ 	turn(dir,speed) ---->>> dir[1=left, 0=right]
+
+ Photo Diodes	Arduino		ATMEGA328P
+ 	    1 				D2	  		PD2
+ 	    2	  			D3		   	PD3
+ 	    3 		 		D4		   	PD4
+ 	    4 				D5		  	PD5
+      
+ UltraSonic    Arduino     ATMEGA328P
+    Echo        A5          PC5        
+    Trig        A4          PC4
+
+ RGB LED 	Arduino		ATMEGA328P
+ 	  R 			 A1			PC1
+ 	  G			   A2			PC2
+ 	  B 			 A3 		PC3
+ 	  LDR 		 A6 		PC6
+
+ */
+
+#define F_CPU 16000000UL
+
+#include <util/delay.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define BAUD 9600
+#define MYUBRR ((F_CPU/(BAUD * 16UL))-1)
+
+#define IR1 2
+#define IR2 3
+#define IR3 4
+#define IR4 5
+
+#define Red 1
+#define Green 2
+#define Blue 3
+#define LDR 6
+
+float error = 0;
+float wait = 0;
+
+float Kp = 2000;  //PID < 2500
+float Kd = 150;
+float Ki = .7;
+
+float P = 0;
+float I = 0;
+float D = 0;
+int PIDvalue = 0;
+float previousError = 0;
+float previousError2 = 0;
+float previousI = 0;
+
+void init_IR(void);
+float ReadLFSensor(void);
+int calculatePID(void);
+
+void init_PWM(void);
+void turn(int dir,int speed);
+void move(int dir,int Lspeed,int Rspeed, int pid);
+void breakAll(void);
+
+void detectColor(void);
+void init_ColorSens(void);
+void init_ADC(void);
+uint16_t ReadADC(uint8_t ADCchannel);
+
+void init_USART(void);
+void USART_send(unsigned char data);
+void USART_string(char* Stringptr);
+void USART_number(uint32_t x);
+
+double potval,rval,gval,bval;
+char color;
+int colorDelay = 0;
+
+int main(void){
+
+  init_IR();
+  init_PWM(); 
+  init_USART();
+  init_ColorSens();
+
+  while(1){
+    ReadLFSensor();
+    if((previousError == 2) && (wait == 1)){error=4;}
+    if((previousError == -2) && (error == -4)){error = 4;}
+    
+    calculatePID();
+    breakAll();
+    _delay_ms(50);
+    move(1,12000,12000,PIDvalue);
+
+    }
+  return 0;
+  
+}
+void init_IR(void){
+  DDRD = DDRD &~(1<<IR4)&~(1<<IR3)&~(1<<IR2)&~(1<<IR1);
+
+}
+
+float ReadLFSensor(void){
+  
+  if ( (PIND & (1<<IR1)) && (PIND & (1<<IR2)) && (PIND & (1<<IR3)) && (PIND & (1<<IR4)) ){ wait = 1;}
+  else if ( (PIND & (1<<IR1)) && (PIND & (1<<IR2)) && (PIND & (1<<IR3)) ){ error = 3;}
+  else if ( (PIND & (1<<IR1)) && (PIND & (1<<IR2)) && (PIND & (1<<IR4)) ){ error = 1;}
+  else if ( (PIND & (1<<IR1)) && (PIND & (1<<IR3)) && (PIND & (1<<IR4)) ){ error = -1;}
+  else if ( (PIND & (1<<IR2)) && (PIND & (1<<IR3)) && (PIND & (1<<IR4)) ){ error = -3;}
+  else if ( (PIND & (1<<IR1)) && (PIND & (1<<IR2)) ){ error = 2;}
+  else if ( (PIND & (1<<IR1)) && (PIND & (1<<IR4)) ){ error = 0;}
+  else if ( (PIND & (1<<IR3)) && (PIND & (1<<IR4)) ){ error =-2;}
+  else if ( (PIND & (1<<IR1)) ){ error = 4;}
+  else if ( (PIND & (1<<IR4)) ){ error = -4;}
+    
+  return error;
+}
+
+int calculatePID(void){
+  P = error;
+  I = I + error;
+  D = error-previousError;
+  PIDvalue = (Kp*P) + (Ki*I) + (Kd*D);
+  previousError2 = previousError;
+  previousError = error;
+
+  return PIDvalue;
+}
+
+void init_PWM(void){
+  DDRB |= 1<< PB5 | 1<<PB4 | 1<< PB2 | 1<<PB1;
+  TCCR1A = 1<<COM1A1 | 1<<COM1B1 | 1<<WGM11 ;	
+  TCCR1B = 0<<ICNC1 | 0<<ICES1 | 1<< WGM13 | 1<< WGM12| 0<<CS12 | 1<<CS11 | 0<<CS10; 
+}
+
+void move(int dir,int Lspeed, int Rspeed, int pid){
+  
+  ICR1 = 22000;
+  OCR1A = Rspeed + pid;		//D9
+  OCR1B = Lspeed - pid;		//D10
+  
+  if(dir == 1){
+      PORTB = PORTB|(1<<4)|(1<<5);
+    
+  }else if(dir == 0){
+      PORTB = PORTB &~(1<<4)&~(1<<5);
+  }
+}
+
+void turn(int dir,int speed){
+  
+  ICR1 = 22000;
+  OCR1A = speed;	
+  OCR1B =speed;
+  
+  if(dir == 0){
+    PORTB = PORTB|(1<<4); //pd2 >>> pb4		pd3 >>> pb5 
+    PORTB = PORTB &~(1<<5);
+  }else if(dir == 1){
+    PORTB = PORTB| (1<<5);
+    PORTB = PORTB &~(1<<4);
+  }
+}
+
+void breakAll(void){
+  PORTB =0xff;
+}
+
+void init_ColorSens(void){
+  DDRC |= (1<<Red)|(1<<Green)|(1<<Blue);
+  DDRC = DDRC &=~ (1<LDR);
+
+  TCCR0A |= (1 << WGM01);
+   OCR0A = 249; // Set the value that you want to count to
+  TIMSK0 |= (1 << OCIE0A);    //Set the ISR COMPA vect
+  sei();         //enable interrupts
+  TCCR0B |= (1 << CS02);    // set prescaler to 256 and start the timer
+
+}
+
+void detectColor(void){
+/*
+    for (int i = 1; i < 4; i++){
+      PORTC = PORTC|(1<<i);
+      _delay_ms(40);
+      potval =(int)ReadADC(LDR);
+      if (i == 1){bval = potval;}
+      else if (i == 2){gval = potval;}
+      else if (i == 3){rval = potval;}
+      PORTC = 0;
+      _delay_ms(40);
+    }
+
+    if((700>bval) && (700>gval) && (722>rval)){ USART_string("Color = Black\r\n");}
+    else if((bval>840) && (gval>860) && (rval>850)){USART_string("Color = White\r\n");}
+    else if(( (780>bval)&&(bval>680) ) && ( (810>gval)&&(gval>730) ) && ( (730>rval)&&(rval>590) )){USART_string("Color = Green\r\n");}
+    else if(( (860>bval)&&(bval>730) ) && ( (810>gval)&&(gval>740) ) && ( (715>rval)&&(rval>600) )){USART_string("Color = Blue\r\n");}
+    else if(( (870>bval)&&(bval>780) ) && ( (870>gval)&&(gval>800) ) && ( (860>rval)&&(rval>770) )){USART_string("Color = Gray\r\n");}
+    else if(( (800>bval)&&(bval>650) ) && ( (805>gval)&&(gval>720) ) && ( (900>rval)&&(rval>830) )){USART_string("Coloe = Red\r\n");}
+    else{USART_string("Color Not Detected\r\n");}
+*/
+}
+
+ISR (TIMER0_COMPA_vect){  //action every 4ms
+  colorDelay++;
+  if(colorDelay==100){
+    USART_number(colorDelay);
+    USART_string("\n\r");
+    //detectColor();
+    colorDelay = 0;
+  }
+}
+
+void init_ADC(void)
+{
+    // Select Vref=AVcc
+    ADMUX |= (1<<REFS0);
+    //set prescaller to 128 and enable ADC  
+    ADCSRA |= (1<<ADPS2)|(1<<ADPS1)|(1<<ADPS0)|(1<<ADEN);     
+}
+
+uint16_t ReadADC(uint8_t ADCchannel)
+{
+    //select ADC channel with safety mask
+    ADMUX = (ADMUX & 0xF0) | (ADCchannel & 0x0F); 
+    //single conversion mode
+    ADCSRA |= (1<<ADSC);
+    // wait until ADC conversion is complete
+    while( ADCSRA & (1<<ADSC) );
+   return ADC;
+}
+
+void init_USART(void)
+{
+  UBRR0H = (uint8_t)(MYUBRR>>8);   
+  UBRR0L = (uint8_t)(MYUBRR);   
+  UCSR0B = (1<<RXEN0)|(1<<TXEN0);
+  UCSR0C = (1<<USBS0)|(3<<UCSZ00);
+}
+
+unsigned char USART_receive(void){
+  while(!(UCSR0A & (1<<RXC0)));
+  return UDR0;
+
+}
+
+void USART_send(unsigned char data){
+  while(!(UCSR0A & (1<<UDRE0)));
+  UDR0 = data;
+
+}
+
+void USART_string(char* Stringptr){
+  while(*Stringptr != 0x00){
+    USART_send(*Stringptr);
+    Stringptr++;
+  }
+
+}
+
+void USART_number(uint32_t x){
+  char value[10];
+  int i = 0;
+
+  do{
+    value[i++] = (char)(x % 10) + '0';
+    x /= 10;
+
+  }while(x);
+
+  while(i){
+    USART_send(value[--i]);
+  }
+}

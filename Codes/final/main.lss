@@ -1,0 +1,267 @@
+
+main.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .data         00000000  00800100  00000172  000001e6  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  1 .text         00000172  00000000  00000000  00000074  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .stab         00000738  00000000  00000000  000001e8  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  3 .stabstr      000000a1  00000000  00000000  00000920  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .comment      00000021  00000000  00000000  000009c1  2**0
+                  CONTENTS, READONLY
+  5 .debug_aranges 00000028  00000000  00000000  000009e2  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_info   0000031b  00000000  00000000  00000a0a  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_abbrev 00000198  00000000  00000000  00000d25  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_line   000000f3  00000000  00000000  00000ebd  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_frame  00000064  00000000  00000000  00000fb0  2**2
+                  CONTENTS, READONLY, DEBUGGING
+ 10 .debug_str    00000168  00000000  00000000  00001014  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 11 .debug_loc    00000044  00000000  00000000  0000117c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 12 .debug_ranges 00000018  00000000  00000000  000011c0  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 34 00 	jmp	0x68	; 0x68 <__ctors_end>
+   4:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+   8:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+   c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  10:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  14:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  18:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  1c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  20:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  24:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  28:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  2c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  30:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  34:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  38:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  3c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  40:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  44:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  48:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  4c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  50:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  54:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  58:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  5c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  60:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  64:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+
+00000068 <__ctors_end>:
+  68:	11 24       	eor	r1, r1
+  6a:	1f be       	out	0x3f, r1	; 63
+  6c:	cf ef       	ldi	r28, 0xFF	; 255
+  6e:	d8 e0       	ldi	r29, 0x08	; 8
+  70:	de bf       	out	0x3e, r29	; 62
+  72:	cd bf       	out	0x3d, r28	; 61
+  74:	0e 94 82 00 	call	0x104	; 0x104 <main>
+  78:	0c 94 b7 00 	jmp	0x16e	; 0x16e <_exit>
+
+0000007c <__bad_interrupt>:
+  7c:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+00000080 <move>:
+
+void move(int dir,int speed){
+  // dir 0 = move forward
+  // dir 1 = move backword
+  
+  ICR1 = 200000;
+  80:	20 e4       	ldi	r18, 0x40	; 64
+  82:	3d e0       	ldi	r19, 0x0D	; 13
+  84:	30 93 87 00 	sts	0x0087, r19
+  88:	20 93 86 00 	sts	0x0086, r18
+  OCR1A = 10000;
+  8c:	20 e1       	ldi	r18, 0x10	; 16
+  8e:	37 e2       	ldi	r19, 0x27	; 39
+  90:	30 93 89 00 	sts	0x0089, r19
+  94:	20 93 88 00 	sts	0x0088, r18
+  OCR1B =50000;
+  98:	20 e5       	ldi	r18, 0x50	; 80
+  9a:	33 ec       	ldi	r19, 0xC3	; 195
+  9c:	30 93 8b 00 	sts	0x008B, r19
+  a0:	20 93 8a 00 	sts	0x008A, r18
+  
+  if(dir == 1){
+  a4:	81 30       	cpi	r24, 0x01	; 1
+  a6:	91 05       	cpc	r25, r1
+  a8:	19 f4       	brne	.+6      	; 0xb0 <move+0x30>
+      PORTD = PORTD|(1<<2)|(1<<3);
+  aa:	8b b1       	in	r24, 0x0b	; 11
+  ac:	8c 60       	ori	r24, 0x0C	; 12
+  ae:	03 c0       	rjmp	.+6      	; 0xb6 <move+0x36>
+    
+  }else if(dir == 0){
+  b0:	89 2b       	or	r24, r25
+  b2:	11 f4       	brne	.+4      	; 0xb8 <move+0x38>
+      PORTD = PORTD|(0<<2)|(0<<3);
+  b4:	8b b1       	in	r24, 0x0b	; 11
+  b6:	8b b9       	out	0x0b, r24	; 11
+  b8:	08 95       	ret
+
+000000ba <turn>:
+
+void turn(int dir,int speed){
+  // dir 1 = turn Left	
+  // dir 0 = turn Right		
+  
+  ICR1 = 50000;
+  ba:	20 e5       	ldi	r18, 0x50	; 80
+  bc:	33 ec       	ldi	r19, 0xC3	; 195
+  be:	30 93 87 00 	sts	0x0087, r19
+  c2:	20 93 86 00 	sts	0x0086, r18
+  OCR1A = speed;
+  c6:	70 93 89 00 	sts	0x0089, r23
+  ca:	60 93 88 00 	sts	0x0088, r22
+  OCR1B =speed;
+  ce:	70 93 8b 00 	sts	0x008B, r23
+  d2:	60 93 8a 00 	sts	0x008A, r22
+  
+  if(dir == 0){
+  d6:	00 97       	sbiw	r24, 0x00	; 0
+  d8:	11 f4       	brne	.+4      	; 0xde <turn+0x24>
+    PORTD = PORTD|(1<<2)|(0<<3);
+  da:	5a 9a       	sbi	0x0b, 2	; 11
+  dc:	08 95       	ret
+  }else if(dir == 1){
+  de:	01 97       	sbiw	r24, 0x01	; 1
+  e0:	09 f4       	brne	.+2      	; 0xe4 <turn+0x2a>
+    PORTD = PORTD|(0<<2)|(1<<3);
+  e2:	5b 9a       	sbi	0x0b, 3	; 11
+  e4:	08 95       	ret
+
+000000e6 <breakAll>:
+  }
+}
+
+
+void breakAll(){
+  PORTD =0x00;
+  e6:	1b b8       	out	0x0b, r1	; 11
+  e8:	08 95       	ret
+
+000000ea <init_pwm>:
+}
+
+
+void init_pwm(){
+  DDRD |= 1<< PD4 | 1<< PD5;
+  ea:	8a b1       	in	r24, 0x0a	; 10
+  ec:	80 63       	ori	r24, 0x30	; 48
+  ee:	8a b9       	out	0x0a, r24	; 10
+  DDRB |= 1<< PB2 | 1<<PB1;
+  f0:	84 b1       	in	r24, 0x04	; 4
+  f2:	86 60       	ori	r24, 0x06	; 6
+  f4:	84 b9       	out	0x04, r24	; 4
+  TCCR1A = 1<<COM1A1 | 1<<COM1B1 | 1<<WGM11 ;	
+  f6:	82 ea       	ldi	r24, 0xA2	; 162
+  f8:	80 93 80 00 	sts	0x0080, r24
+  TCCR1B = 0<<ICNC1 | 0<<ICES1 | 1<< WGM13 | 1<< WGM12| 0<<CS12 | 1<<CS11 | 0<<CS10; 
+  fc:	8a e1       	ldi	r24, 0x1A	; 26
+  fe:	80 93 81 00 	sts	0x0081, r24
+ 102:	08 95       	ret
+
+00000104 <main>:
+
+void init_pwm();
+
+int main(void){
+   		
+  init_pwm();
+ 104:	0e 94 75 00 	call	0xea	; 0xea <init_pwm>
+  
+  while(1){
+   
+    move(0,20000);
+ 108:	60 e2       	ldi	r22, 0x20	; 32
+ 10a:	7e e4       	ldi	r23, 0x4E	; 78
+ 10c:	80 e0       	ldi	r24, 0x00	; 0
+ 10e:	90 e0       	ldi	r25, 0x00	; 0
+ 110:	0e 94 40 00 	call	0x80	; 0x80 <move>
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+ 114:	2f ef       	ldi	r18, 0xFF	; 255
+ 116:	8b e6       	ldi	r24, 0x6B	; 107
+ 118:	9b e6       	ldi	r25, 0x6B	; 107
+ 11a:	21 50       	subi	r18, 0x01	; 1
+ 11c:	80 40       	sbci	r24, 0x00	; 0
+ 11e:	90 40       	sbci	r25, 0x00	; 0
+ 120:	e1 f7       	brne	.-8      	; 0x11a <main+0x16>
+ 122:	00 c0       	rjmp	.+0      	; 0x124 <main+0x20>
+ 124:	00 00       	nop
+  }
+}
+
+
+void breakAll(){
+  PORTD =0x00;
+ 126:	1b b8       	out	0x0b, r1	; 11
+ 128:	2f ef       	ldi	r18, 0xFF	; 255
+ 12a:	81 ee       	ldi	r24, 0xE1	; 225
+ 12c:	94 e0       	ldi	r25, 0x04	; 4
+ 12e:	21 50       	subi	r18, 0x01	; 1
+ 130:	80 40       	sbci	r24, 0x00	; 0
+ 132:	90 40       	sbci	r25, 0x00	; 0
+ 134:	e1 f7       	brne	.-8      	; 0x12e <main+0x2a>
+ 136:	00 c0       	rjmp	.+0      	; 0x138 <main+0x34>
+ 138:	00 00       	nop
+    move(0,20000);
+    _delay_ms(2200);
+    breakAll();
+    _delay_ms(100);
+    
+    turn(0,30000);
+ 13a:	60 e3       	ldi	r22, 0x30	; 48
+ 13c:	75 e7       	ldi	r23, 0x75	; 117
+ 13e:	80 e0       	ldi	r24, 0x00	; 0
+ 140:	90 e0       	ldi	r25, 0x00	; 0
+ 142:	0e 94 5d 00 	call	0xba	; 0xba <turn>
+ 146:	2f ef       	ldi	r18, 0xFF	; 255
+ 148:	81 e0       	ldi	r24, 0x01	; 1
+ 14a:	93 e5       	ldi	r25, 0x53	; 83
+ 14c:	21 50       	subi	r18, 0x01	; 1
+ 14e:	80 40       	sbci	r24, 0x00	; 0
+ 150:	90 40       	sbci	r25, 0x00	; 0
+ 152:	e1 f7       	brne	.-8      	; 0x14c <main+0x48>
+ 154:	00 c0       	rjmp	.+0      	; 0x156 <main+0x52>
+ 156:	00 00       	nop
+  }
+}
+
+
+void breakAll(){
+  PORTD =0x00;
+ 158:	1b b8       	out	0x0b, r1	; 11
+ 15a:	2f ef       	ldi	r18, 0xFF	; 255
+ 15c:	81 ee       	ldi	r24, 0xE1	; 225
+ 15e:	94 e0       	ldi	r25, 0x04	; 4
+ 160:	21 50       	subi	r18, 0x01	; 1
+ 162:	80 40       	sbci	r24, 0x00	; 0
+ 164:	90 40       	sbci	r25, 0x00	; 0
+ 166:	e1 f7       	brne	.-8      	; 0x160 <main+0x5c>
+ 168:	00 c0       	rjmp	.+0      	; 0x16a <main+0x66>
+ 16a:	00 00       	nop
+ 16c:	cd cf       	rjmp	.-102    	; 0x108 <main+0x4>
+
+0000016e <_exit>:
+ 16e:	f8 94       	cli
+
+00000170 <__stop_program>:
+ 170:	ff cf       	rjmp	.-2      	; 0x170 <__stop_program>
